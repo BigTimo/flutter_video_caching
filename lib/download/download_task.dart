@@ -123,16 +123,21 @@ class DownloadTask {
 
   /// Returns the file name to be used for saving, including the extension.
   String get saveFileName {
-    String? extensionName = fileName.split(".").lastOrNull;
+    String? extensionName;
     try {
-      Uri uri = fileName.toSafeUri();
+      final uri = fileName.toSafeUri();
       if (uri.pathSegments.isNotEmpty) {
-        extensionName = uri.pathSegments.last.split(".").lastOrNull;
+        //Encoded separators become literal slashes when pathSegments is decoded.
+        final name = uri.pathSegments.last.split(RegExp(r'[/\\]')).last;
+        final dot = name.lastIndexOf('.');
+        if (dot > 0 && dot < name.length - 1) {
+          extensionName = name.substring(dot + 1);
+        }
       }
     } catch (e) {
       logD("Uri parse error: $fileName");
     }
-    return '${matchUrl}.$extensionName';
+    return extensionName == null ? matchUrl : '$matchUrl.$extensionName';
   }
 
   /// Returns the file path to be used for saving.
